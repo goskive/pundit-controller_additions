@@ -71,7 +71,7 @@ module Pundit
     end
 
     def load_collection?
-      resource_base.is_a?(ActiveRecord::Relation)
+      resource_base.respond_to?(:unscoped)
     end
 
     def load_collection
