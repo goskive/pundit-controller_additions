@@ -16,9 +16,9 @@ module CanCan
       @params = controller.params
       @options = args.extract_options!
       @name = args.first
-      raise CanCan::ImplementationRemoved, "The :nested option is no longer supported, instead use :through with separate load/authorize call." if @options[:nested]
-      raise CanCan::ImplementationRemoved, "The :name option is no longer supported, instead pass the name as the first argument." if @options[:name]
-      raise CanCan::ImplementationRemoved, "The :resource option has been renamed back to :class, use false if no class." if @options[:resource]
+      fail CanCan::ImplementationRemoved, 'The :nested option is no longer supported, instead use :through with separate load/authorize call.' if @options[:nested]
+      fail CanCan::ImplementationRemoved, 'The :name option is no longer supported, instead pass the name as the first argument.' if @options[:name]
+      fail CanCan::ImplementationRemoved, 'The :resource option has been renamed back to :class, use false if no class.' if @options[:resource]
     end
 
     def load_and_authorize_resource
@@ -43,15 +43,15 @@ module CanCan
     end
 
     def parent?
-      @options.has_key?(:parent) ? @options[:parent] : @name && @name != name_from_controller.to_sym
+      @options.key?(:parent) ? @options[:parent] : @name && @name != name_from_controller.to_sym
     end
 
     def skip?(behavior)
       return false unless options = @controller.class.cancan_skipper[behavior][@name]
 
       options == {} ||
-      options[:except] && !action_exists_in?(options[:except]) ||
-      action_exists_in?(options[:only])
+        options[:except] && !action_exists_in?(options[:except]) ||
+        action_exists_in?(options[:only])
     end
 
     protected
@@ -90,7 +90,7 @@ module CanCan
     end
 
     def initial_attributes
-      current_ability.attributes_for(@params[:action].to_sym, resource_class).delete_if do |key, value|
+      current_ability.attributes_for(@params[:action].to_sym, resource_class).delete_if do |key, _value|
         resource_params && resource_params.include?(key)
       end
     end
@@ -102,8 +102,8 @@ module CanCan
         if @options[:find_by]
           if resource_base.respond_to? "find_by_#{@options[:find_by]}!"
             resource_base.send("find_by_#{@options[:find_by]}!", id_param)
-          elsif resource_base.respond_to? "find_by"
-            resource_base.send("find_by", { @options[:find_by].to_sym => id_param })
+          elsif resource_base.respond_to? 'find_by'
+            resource_base.send('find_by', @options[:find_by].to_sym => id_param)
           else
             resource_base.send(@options[:find_by], id_param)
           end
@@ -138,7 +138,7 @@ module CanCan
     end
 
     def member_action?
-      new_actions.include?(@params[:action].to_sym) || @options[:singleton] || ( (@params[:id] || @params[@options[:id_param]]) && !collection_actions.include?(@params[:action].to_sym))
+      new_actions.include?(@params[:action].to_sym) || @options[:singleton] || ((@params[:id] || @params[@options[:id_param]]) && !collection_actions.include?(@params[:action].to_sym))
     end
 
     # Returns the class used for this resource. This can be overriden by the :class option.
@@ -154,7 +154,7 @@ module CanCan
     end
 
     def resource_class_with_parent
-      parent_resource ? {parent_resource => resource_class} : resource_class
+      parent_resource ? { parent_resource => resource_class } : resource_class
     end
 
     def resource_instance=(instance)
@@ -186,7 +186,7 @@ module CanCan
         elsif @options[:shallow]
           resource_class
         else
-          raise AccessDenied.new(nil, authorization_action, resource_class) # maybe this should be a record not found error instead?
+          fail AccessDenied.new(nil, authorization_action, resource_class) # maybe this should be a record not found error instead?
         end
       else
         resource_class
@@ -221,9 +221,9 @@ module CanCan
     def resource_params
       if parameters_require_sanitizing? && params_method.present?
         return case params_method
-          when Symbol then @controller.send(params_method)
-          when String then @controller.instance_eval(params_method)
-          when Proc then params_method.call(@controller)
+               when Symbol then @controller.send(params_method)
+               when String then @controller.instance_eval(params_method)
+               when Proc then params_method.call(@controller)
         end
       else
         resource_params_by_namespaced_name
@@ -235,9 +235,9 @@ module CanCan
     end
 
     def resource_params_by_namespaced_name
-      if @options[:instance_name] && @params.has_key?(extract_key(@options[:instance_name]))
+      if @options[:instance_name] && @params.key?(extract_key(@options[:instance_name]))
         @params[extract_key(@options[:instance_name])]
-      elsif @options[:class] && @params.has_key?(extract_key(@options[:class]))
+      elsif @options[:class] && @params.key?(extract_key(@options[:class]))
         @params[extract_key(@options[:class])]
       else
         @params[extract_key(namespaced_name)]
@@ -294,7 +294,7 @@ module CanCan
     end
 
     def extract_key(value)
-       value.to_s.underscore.gsub('/', '_')
+      value.to_s.underscore.gsub('/', '_')
     end
   end
 end

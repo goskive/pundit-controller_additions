@@ -1,5 +1,4 @@
 module CanCan
-
   # This module is automatically included into all controllers.
   # It also makes the "can?" and "cannot?" methods available to all views.
   module ControllerAdditions
@@ -254,11 +253,11 @@ module CanCan
       #     check_authorization :unless => :devise_controller?
       #
       def check_authorization(options = {})
-        self.after_filter(options.slice(:only, :except)) do |controller|
+        after_filter(options.slice(:only, :except)) do |controller|
           next if controller.instance_variable_defined?(:@_authorized)
           next if options[:if] && !controller.send(options[:if])
           next if options[:unless] && controller.send(options[:unless])
-          raise AuthorizationNotPerformed, "This action failed the check_authorization because it does not authorize_resource. Add skip_authorization_check to bypass this check."
+          fail AuthorizationNotPerformed, 'This action failed the check_authorization because it does not authorize_resource. Add skip_authorization_check to bypass this check.'
         end
       end
 
@@ -270,17 +269,17 @@ module CanCan
       #
       # Any arguments are passed to the +before_filter+ it triggers.
       def skip_authorization_check(*args)
-        self.before_filter(*args) do |controller|
+        before_filter(*args) do |controller|
           controller.instance_variable_set(:@_authorized, true)
         end
       end
 
-      def skip_authorization(*args)
-        raise ImplementationRemoved, "The CanCan skip_authorization method has been renamed to skip_authorization_check. Please update your code."
+      def skip_authorization(*_args)
+        fail ImplementationRemoved, 'The CanCan skip_authorization method has been renamed to skip_authorization_check. Please update your code.'
       end
 
       def cancan_resource_class
-        if ancestors.map(&:to_s).include? "InheritedResources::Actions"
+        if ancestors.map(&:to_s).include? 'InheritedResources::Actions'
           InheritedResource
         else
           ControllerResource
@@ -288,7 +287,7 @@ module CanCan
       end
 
       def cancan_skipper
-        @_cancan_skipper ||= {:authorize => {}, :load => {}}
+        @_cancan_skipper ||= { authorize: {}, load: {} }
       end
     end
 
@@ -338,8 +337,8 @@ module CanCan
       current_ability.authorize!(*args)
     end
 
-    def unauthorized!(message = nil)
-      raise ImplementationRemoved, "The unauthorized! method has been removed from CanCan, use authorize! instead."
+    def unauthorized!(_message = nil)
+      fail ImplementationRemoved, 'The unauthorized! method has been removed from CanCan, use authorize! instead.'
     end
 
     # Creates and returns the current user's ability and caches it. If you
