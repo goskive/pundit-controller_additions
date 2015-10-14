@@ -1,4 +1,4 @@
-module CanCan
+module Pundit
   # Handle the load and authorization controller logic so we don't clutter up all controllers with non-interface methods.
   # This class is used internally, so you do not need to call methods directly on it.
   class ControllerResource # :nodoc:

@@ -1,4 +1,7 @@
-module CanCan
+require 'pundit'
+require 'pundit/controller_resource'
+
+module Pundit
   # This module is automatically included into all controllers.
   # It also makes the "can?" and "cannot?" methods available to all views.
   module ControllerAdditions
@@ -179,7 +182,7 @@ module CanCan
         cancan_resource_class.add_before_filter(self, :authorize_resource, *args)
       end
 
-      # Skip both the loading and authorization behavior of CanCan for this given controller. This is primarily
+      # Skip both the loading and authorization behavior of Pundit for this given controller. This is primarily
       # useful to skip the behavior of a superclass. You can pass :only and :except options to specify which actions
       # to skip the effects on. It will apply to all actions by default.
       #
@@ -193,7 +196,7 @@ module CanCan
         skip_authorize_resource(*args)
       end
 
-      # Skip the loading behavior of CanCan. This is useful when using +load_and_authorize_resource+ but want to
+      # Skip the loading behavior of Pundit. This is useful when using +load_and_authorize_resource+ but want to
       # only do authorization on certain actions. You can pass :only and :except options to specify which actions to
       # skip the effects on. It will apply to all actions by default.
       #
@@ -209,7 +212,7 @@ module CanCan
         cancan_skipper[:load][name] = options
       end
 
-      # Skip the authorization behavior of CanCan. This is useful when using +load_and_authorize_resource+ but want to
+      # Skip the authorization behavior of Pundit. This is useful when using +load_and_authorize_resource+ but want to
       # only do loading on certain actions. You can pass :only and :except options to specify which actions to
       # skip the effects on. It will apply to all actions by default.
       #
@@ -226,7 +229,7 @@ module CanCan
       end
 
       # Add this to a controller to ensure it performs authorization through +authorized+! or +authorize_resource+ call.
-      # If neither of these authorization methods are called, a CanCan::AuthorizationNotPerformed exception will be raised.
+      # If neither of these authorization methods are called, a Pundit::AuthorizationNotPerformed exception will be raised.
       # This is normally added to the ApplicationController to ensure all controller actions do authorization.
       #
       #   class ApplicationController < ActionController::Base
@@ -295,6 +298,6 @@ end
 
 if defined? ActionController::Base
   ActionController::Base.class_eval do
-    include CanCan::ControllerAdditions
+    include Pundit::ControllerAdditions
   end
 end
