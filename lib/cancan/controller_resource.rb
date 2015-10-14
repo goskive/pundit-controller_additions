@@ -35,7 +35,12 @@ module CanCan
 
     def authorize_resource
       unless skip?(:authorize)
-        @controller.authorize!(authorization_action, resource_instance || resource_class_with_parent)
+        if resource_instance
+          @controller.authorize(resource_instance, :"#{authorization_action}?")
+        else
+          # TODO: fix authorization when parent resource present
+          Rails.logger.warn "Skipping authorization for #{resource_class_with_parent}"
+        end
       end
     end
 
@@ -66,11 +71,11 @@ module CanCan
     end
 
     def load_collection?
-      resource_base.respond_to?(:accessible_by) && !current_ability.has_block?(authorization_action, resource_class)
+      resource_base.is_a?(ActiveRecord::Relation)
     end
 
     def load_collection
-      resource_base.accessible_by(current_ability, authorization_action)
+      @controller.policy_scope(resource_base)
     end
 
     def build_resource
@@ -80,16 +85,7 @@ module CanCan
 
     def assign_attributes(resource)
       resource.send("#{parent_name}=", parent_resource) if @options[:singleton] && parent_resource
-      initial_attributes.each do |attr_name, value|
-        resource.send("#{attr_name}=", value)
-      end
       resource
-    end
-
-    def initial_attributes
-      current_ability.attributes_for(@params[:action].to_sym, resource_class).delete_if do |key, _value|
-        resource_params && resource_params.include?(key)
-      end
     end
 
     def find_resource
@@ -105,13 +101,9 @@ module CanCan
             resource_base.send(@options[:find_by], id_param)
           end
         else
-          adapter.find(resource_base, id_param)
+          resource_base.find(id_param)
         end
       end
-    end
-
-    def adapter
-      ModelAdapters::AbstractAdapter.adapter_class(resource_class)
     end
 
     def authorization_action
@@ -183,7 +175,7 @@ module CanCan
         elsif @options[:shallow]
           resource_class
         else
-          fail AccessDenied.new(nil, authorization_action, resource_class) # maybe this should be a record not found error instead?
+          fail NotAuthorizedError.new(query: authorization_action, record: resource_class)
         end
       else
         resource_class
@@ -205,10 +197,6 @@ module CanCan
       elsif @controller.respond_to?(name, true)
         @controller.send(name)
       end
-    end
-
-    def current_ability
-      @controller.send(:current_ability)
     end
 
     def name

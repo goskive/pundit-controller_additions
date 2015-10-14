@@ -257,7 +257,7 @@ module CanCan
           next if controller.instance_variable_defined?(:@_authorized)
           next if options[:if] && !controller.send(options[:if])
           next if options[:unless] && controller.send(options[:unless])
-          fail AuthorizationNotPerformed, 'This action failed the check_authorization because it does not authorize_resource. Add skip_authorization_check to bypass this check.'
+          fail AuthorizationNotPerformedError, 'This action failed the check_authorization because it does not authorize_resource. Add skip_authorization_check to bypass this check.'
         end
       end
 
@@ -289,94 +289,6 @@ module CanCan
 
     def self.included(base)
       base.extend ClassMethods
-      base.helper_method :can?, :cannot?, :current_ability if base.respond_to? :helper_method
-    end
-
-    # Raises a CanCan::AccessDenied exception if the current_ability cannot
-    # perform the given action. This is usually called in a controller action or
-    # before filter to perform the authorization.
-    #
-    #   def show
-    #     @article = Article.find(params[:id])
-    #     authorize! :read, @article
-    #   end
-    #
-    # A :message option can be passed to specify a different message.
-    #
-    #   authorize! :read, @article, :message => "Not authorized to read #{@article.name}"
-    #
-    # You can also use I18n to customize the message. Action aliases defined in Ability work here.
-    #
-    #   en:
-    #     unauthorized:
-    #       manage:
-    #         all: "Not authorized to %{action} %{subject}."
-    #         user: "Not allowed to manage other user accounts."
-    #       update:
-    #         project: "Not allowed to update this project."
-    #
-    # You can rescue from the exception in the controller to customize how unauthorized
-    # access is displayed to the user.
-    #
-    #   class ApplicationController < ActionController::Base
-    #     rescue_from CanCan::AccessDenied do |exception|
-    #       redirect_to root_url, :alert => exception.message
-    #     end
-    #   end
-    #
-    # See the CanCan::AccessDenied exception for more details on working with the exception.
-    #
-    # See the load_and_authorize_resource method to automatically add the authorize! behavior
-    # to the default RESTful actions.
-    def authorize!(*args)
-      @_authorized = true
-      current_ability.authorize!(*args)
-    end
-
-    # Creates and returns the current user's ability and caches it. If you
-    # want to override how the Ability is defined then this is the place.
-    # Just define the method in the controller to change behavior.
-    #
-    #   def current_ability
-    #     # instead of Ability.new(current_user)
-    #     @current_ability ||= UserAbility.new(current_account)
-    #   end
-    #
-    # Notice it is important to cache the ability object so it is not
-    # recreated every time.
-    def current_ability
-      @current_ability ||= ::Ability.new(current_user)
-    end
-
-    # Use in the controller or view to check the user's permission for a given action
-    # and object.
-    #
-    #   can? :destroy, @project
-    #
-    # You can also pass the class instead of an instance (if you don't have one handy).
-    #
-    #   <% if can? :create, Project %>
-    #     <%= link_to "New Project", new_project_path %>
-    #   <% end %>
-    #
-    # If it's a nested resource, you can pass the parent instance in a hash. This way it will
-    # check conditions which reach through that association.
-    #
-    #   <% if can? :create, @category => Project %>
-    #     <%= link_to "New Project", new_project_path %>
-    #   <% end %>
-    #
-    # This simply calls "can?" on the current_ability. See Ability#can?.
-    def can?(*args)
-      current_ability.can?(*args)
-    end
-
-    # Convenience method which works the same as "can?" but returns the opposite value.
-    #
-    #   cannot? :destroy, @project
-    #
-    def cannot?(*args)
-      current_ability.cannot?(*args)
     end
   end
 end
