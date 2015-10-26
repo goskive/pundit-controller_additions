@@ -37,9 +37,11 @@ module Pundit
       unless skip?(:authorize)
         if resource_instance
           @controller.authorize(resource_instance, :"#{authorization_action}?")
+        elsif parent_resource
+          @controller.authorize(parent_resource, :"#{parent_authorization_action}?")
+          # @controller.authorize(resource_class,  :"#{authorization_action}?")
         else
-          # TODO: fix authorization when parent resource present
-          Rails.logger.warn "Skipping authorization for #{resource_class_with_parent}"
+          # @controller.authorize(resource_class,  :"#{authorization_action}?")
         end
       end
     end
